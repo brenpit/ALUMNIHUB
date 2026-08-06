@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlumniHub — Module Alumni pour l'enseignement supérieur</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============================================================
+     ÉCRAN 0 — SÉLECTION DE RÔLE (point d'entrée du prototype)
+     Objectif PO : rendre explicites les 3 personas et leurs
+     objectifs avant même d'entrer dans le produit.
+============================================================= -->
+<section id="screen-role-select" class="screen role-select active">
+  <div class="role-select-inner">
+    <div class="brand-hero">
+      <div class="logo">🎓 AlumniHub</div>
+      <p class="tagline">Le module Alumni qui garde le lien entre l'établissement et ses diplômés — de la remise du diplôme jusqu'au suivi de carrière.</p>
+    </div>
+    <h2>Choisissez un profil pour explorer le prototype</h2>
+    <p class="hint">Ce prototype couvre 3 utilisateurs cibles identifiés en Discovery. Chacun a des objectifs et un écran d'accueil différents.</p>
+    <div class="role-cards">
+      <button class="role-card" data-role="admin">
+        <div class="role-icon">🗂️</div>
+        <h3>Responsable Alumni</h3>
+        <p class="role-obj">Gère la base Alumni, crée des campagnes d'enquête, suit les réponses et pilote l'engagement.</p>
+        <span class="role-cta">Entrer dans l'espace →</span>
+      </button>
+      <button class="role-card" data-role="career">
+        <div class="role-icon">📈</div>
+        <h3>Responsable Carrière / Relations Entreprises</h3>
+        <p class="role-obj">Analyse l'insertion professionnelle, les parcours de carrière et produit des rapports pour la direction.</p>
+        <span class="role-cta">Entrer dans l'espace →</span>
+      </button>
+      <button class="role-card" data-role="alumni">
+        <div class="role-icon">🎓</div>
+        <h3>Alumni (diplômé)</h3>
+        <p class="role-obj">Consulte et met à jour son profil, répond aux enquêtes, garde le lien avec son école.</p>
+        <span class="role-cta">Entrer dans l'espace →</span>
+      </button>
+    </div>
+    <p class="assumptions-link"><button id="btn-show-assumptions" class="link-btn">Voir les hypothèses produit posées pour ce prototype</button></p>
+  </div>
+</section>
+
+<!-- ============================================================
+     MODALE — HYPOTHÈSES PRODUIT (transparence PO)
+============================================================= -->
+<div id="modal-assumptions" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Hypothèses produit posées</h3>
+      <button class="modal-close" data-close-modal>✕</button>
+    </div>
+    <div class="modal-body">
+      <ul>
+        <li>Le SIS (Système d'Information Scolarité) transmet un événement « diplomation » qui déclenche automatiquement la création du profil Alumni — pas de ressaisie manuelle.</li>
+        <li>Un profil Alumni possède un « score de complétion » pour prioriser les relances de mise à jour de données.</li>
+        <li>Les campagnes d'enquête sont segmentables par promotion, formation, pays et ancienneté du diplôme (ex. "diplômé depuis 6 mois").</li>
+        <li>Les relances sont automatiques (J+7, J+14) pour maximiser le taux de réponse, avec un plafond pour éviter la sur-sollicitation.</li>
+        <li>Un moteur de règles ("Quand… Alors…") permet à l'établissement de créer ses propres automatisations sans développeur.</li>
+        <li>Les rapports d'insertion professionnelle doivent être exportables pour les organismes d'accréditation et classements (ex. taux d'emploi à 6 mois).</li>
+        <li>L'Alumni reste maître de ses données (opt-in / opt-out) et se connecte via un compte dédié post-diplomation.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     APPLICATION PRINCIPALE
+============================================================= -->
+<div id="app" class="app hidden">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">🎓 AlumniHub</div>
+    <div class="current-role">
+      <span class="role-badge" id="current-role-badge">Responsable Alumni</span>
+      <button id="btn-switch-role" class="link-btn small">changer de profil</button>
+    </div>
+
+    <nav class="sidebar-nav" id="nav-admin">
+      <button class="nav-item" data-screen="dashboard">📊 Dashboard</button>
+      <button class="nav-item" data-screen="alumni-list">🗂️ Base Alumni</button>
+      <button class="nav-item" data-screen="campaign-create">✉️ Créer une campagne</button>
+      <button class="nav-item" data-screen="questionnaires">📋 Questionnaires</button>
+      <button class="nav-item" data-screen="survey-results">📈 Résultats d'enquête</button>
+      <button class="nav-item" data-screen="automations">⚙️ Automatisations</button>
+    </nav>
+
+    <nav class="sidebar-nav hidden" id="nav-career">
+      <button class="nav-item" data-screen="dashboard">📊 Dashboard</button>
+      <button class="nav-item" data-screen="alumni-list">🗂️ Base Alumni</button>
+      <button class="nav-item" data-screen="survey-results">📈 Résultats & rapports</button>
+    </nav>
+
+    <nav class="sidebar-nav hidden" id="nav-alumni">
+      <button class="nav-item" data-screen="alumni-portal">🎓 Mon espace</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <p>Prototype fonctionnel — cas pratique Product Owner</p>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- ======================================================
+         ÉCRAN 1 — DASHBOARD RESPONSABLE ALUMNI
+    ======================================================= -->
+    <section id="screen-dashboard" class="screen">
+      <header class="screen-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p class="screen-subtitle">Vue globale de la santé de votre communauté Alumni</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-primary" data-goto="campaign-create">+ Nouvelle campagne</button>
+        </div>
+      </header>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span class="kpi-label">Alumni total</span>
+          <span class="kpi-value" id="kpi-total">—</span>
+          <span class="kpi-trend positive">+3.2% ce trimestre</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Profils complétés</span>
+          <span class="kpi-value" id="kpi-completed">—</span>
+          <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-completed-bar"></div></div>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Taux de réponse aux enquêtes</span>
+          <span class="kpi-value" id="kpi-response-rate">—</span>
+          <span class="kpi-trend positive">+5 pts vs dernière campagne</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Insertion pro. (6 mois)</span>
+          <span class="kpi-value" id="kpi-employment">—</span>
+          <span class="kpi-trend neutral">Basé sur 214 réponses</span>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Dernières campagnes</h3>
+            <button class="link-btn" data-goto="survey-results">Voir tout →</button>
+          </div>
+          <table class="mini-table" id="dashboard-campaigns-table">
+            <thead><tr><th>Campagne</th><th>Cible</th><th>Statut</th><th>Taux de réponse</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>Actions rapides</h3></div>
+          <div class="quick-actions">
+            <button class="quick-action" data-goto="campaign-create">
+              <span class="qa-icon">✉️</span>
+              <span>Lancer une enquête</span>
+            </button>
+            <button class="quick-action" data-goto="alumni-list">
+              <span class="qa-icon">🔍</span>
+              <span>Chercher un Alumni</span>
+            </button>
+            <button class="quick-action" data-goto="automations">
+              <span class="qa-icon">⚙️</span>
+              <span>Gérer les automatisations</span>
+            </button>
+            <button class="quick-action" data-goto="questionnaires">
+              <span class="qa-icon">📋</span>
+              <span>Bibliothèque de questionnaires</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel wide">
+          <div class="panel-header"><h3>Répartition des profils par complétion</h3></div>
+          <div class="bar-chart" id="chart-completion"></div>
+        </div>
+
+        <div class="panel wide">
+          <div class="panel-header"><h3>Situation professionnelle des diplômés</h3></div>
+          <div class="bar-chart" id="chart-status"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         ÉCRAN 2 — BASE ALUMNI
+    ======================================================= -->
+    <section id="screen-alumni-list" class="screen">
+      <header class="screen-header">
+        <div>
+          <h1>Base Alumni</h1>
+          <p class="screen-subtitle"><span id="alumni-count-label">—</span> profils</p>
+        </div>
+      </header>
+
+      <div class="toolbar">
+        <input type="search" id="alumni-search" placeholder="Rechercher un nom, une entreprise, un poste…" class="search-input">
+        <select id="filter-promotion" class="filter-select"><option value="">Toutes promotions</option></select>
+        <select id="filter-formation" class="filter-select"><option value="">Toutes formations</option></select>
+        <select id="filter-country" class="filter-select"><option value="">Tous pays</option></select>
+        <select id="filter-status" class="filter-select"><option value="">Toute situation</option></select>
+        <button id="btn-reset-filters" class="btn btn-ghost">Réinitialiser</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Alumni</th>
+              <th>Promotion / Formation</th>
+              <th>Pays</th>
+              <th>Situation</th>
+              <th>Statut profil</th>
+              <th>Dernière mise à jour</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="alumni-table-body"></tbody>
+        </table>
+        <p class="empty-state hidden" id="alumni-empty-state">Aucun Alumni ne correspond à ces filtres.</p>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         ÉCRAN 3 — PROFIL ALUMNI (côté établissement)
+    ======================================================= -->
+    <section id="screen-alumni-profile" class="screen">
+      <header class="screen-header">
+        <div>
+          <button class="link-btn" data-goto="alumni-list">← Retour à la base Alumni</button>
+          <h1 id="profile-name">—</h1>
+          <p class="screen-subtitle" id="profile-subtitle">—</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" data-goto="campaign-create">Inviter à une enquête</button>
+        </div>
+      </header>
+
+      <div class="profile-grid">
+        <div class="panel">
+          <div class="panel-header"><h3>Informations personnelles</h3></div>
+          <dl class="detail-list" id="profile-personal"></dl>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Formation</h3></div>
+          <dl class="detail-list" id="profile-formation"></dl>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Situation professionnelle actuelle</h3></div>
+          <dl class="detail-list" id="profile-job"></dl>
+          <span class="badge" id="profile-completion-badge"></span>
+        </div>
+        <div class="panel wide">
+          <div class="panel-header"><h3>Historique professionnel</h3></div>
+          <ul class="timeline" id="profile-history"></ul>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Dernières interactions</h3></div>
+          <ul class="interaction-list" id="profile-interactions"></ul>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Enquêtes répondues</h3></div>
+          <ul class="interaction-list" id="profile-surveys"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         ÉCRAN 4 — CRÉATION D'UNE CAMPAGNE (WIZARD 4 ÉTAPES)
+    ======================================================= -->
+    <section id="screen-campaign-create" class="screen">
+      <header class="screen-header">
+        <div>
+          <h1>Nouvelle campagne d'enquête</h1>
+          <p class="screen-subtitle">Parcours guidé en 4 étapes — Responsable Alumni</p>
+        </div>
+      </header>
+
+      <div class="wizard-steps">
+        <div class="wizard-step active" data-step="1"><span class="step-num">1</span> Audience</div>
+        <div class="wizard-step" data-step="2"><span class="step-num">2</span> Questionnaire</div>
+        <div class="wizard-step" data-step="3"><span class="step-num">3</span> Programmation</div>
+        <div class="wizard-step" data-step="4"><span class="step-num">4</span> Validation</div>
+      </div>
+
+      <!-- Étape 1 : Audience -->
+      <div class="wizard-pane active" data-pane="1">
+        <div class="panel">
+          <h3>Sélection de l'audience cible</h3>
+          <p class="pane-hint">Combinez les critères pour cibler précisément votre population, par exemple « diplômés 2025 » ou « diplômés depuis 6 mois ».</p>
+          <div class="form-grid">
+            <label>Promotion(s)
+              <select id="wiz-promotion" multiple size="4"></select>
+            </label>
+            <label>Formation(s)
+              <select id="wiz-formation" multiple size="4"></select>
+            </label>
+            <label>Ancienneté du diplôme
+              <select id="wiz-seniority">
+                <option value="all">Toutes anciennetés</option>
+                <option value="6m">Diplômés depuis 6 mois</option>
+                <option value="1y">Diplômés depuis 1 an</option>
+                <option value="3y">Diplômés depuis 3 ans</option>
+              </select>
+            </label>
+            <label>Pays
+              <select id="wiz-country" multiple size="4"></select>
+            </label>
+          </div>
+          <div class="audience-preview">
+            <span class="audience-count" id="wiz-audience-count">0</span> Alumni correspondent à ces critères
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 2 : Questionnaire -->
+      <div class="wizard-pane" data-pane="2">
+        <div class="panel">
+          <h3>Choix du questionnaire</h3>
+          <p class="pane-hint">Sélectionnez un questionnaire existant dans la bibliothèque, ou créez-en un nouveau.</p>
+          <div class="questionnaire-picker" id="wiz-questionnaire-picker"></div>
+          <button class="btn btn-ghost" data-goto="questionnaires">+ Créer un nouveau questionnaire</button>
+        </div>
+      </div>
+
+      <!-- Étape 3 : Programmation -->
+      <div class="wizard-pane" data-pane="3">
+        <div class="panel">
+          <h3>Programmation de l'envoi</h3>
+          <div class="form-grid">
+            <label>Date d'envoi
+              <input type="date" id="wiz-send-date">
+            </label>
+            <label>Canal
+              <select id="wiz-channel">
+                <option>Email</option>
+                <option>Email + Portail Alumni</option>
+              </select>
+            </label>
+          </div>
+          <fieldset class="reminder-config">
+            <legend>Relances automatiques</legend>
+            <label class="checkbox-row"><input type="checkbox" id="wiz-reminder-7" checked> Relance à J+7 si non répondu</label>
+            <label class="checkbox-row"><input type="checkbox" id="wiz-reminder-14" checked> Relance à J+14 si non répondu</label>
+            <p class="pane-hint">Les relances s'arrêtent automatiquement dès qu'une réponse est reçue.</p>
+          </fieldset>
+        </div>
+      </div>
+
+      <!-- Étape 4 : Validation -->
+      <div class="wizard-pane" data-pane="4">
+        <div class="panel">
+          <h3>Récapitulatif et lancement</h3>
+          <dl class="detail-list" id="wiz-summary"></dl>
+          <label class="field-label">Nom de la campagne
+            <input type="text" id="wiz-campaign-name" placeholder="Ex : Enquête insertion pro — Promo 2025">
+          </label>
+        </div>
+      </div>
+
+      <div class="wizard-actions">
+        <button class="btn btn-ghost" id="wiz-prev">← Précédent</button>
+        <button class="btn btn-primary" id="wiz-next">Suivant →</button>
+        <button class="btn btn-primary hidden" id="wiz-launch">🚀 Lancer la campagne</button>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         ÉCRAN 5 — GESTION DES QUESTIONNAIRES
+    ======================================================= -->
+    <section id="screen-questionnaires" class="screen">
+      <header class="screen-header">
+        <div>
+          <h1>Questionnaires</h1>
+          <p class="screen-subtitle">Bibliothèque réutilisable pour vos campagnes</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-primary" id="btn-new-questionnaire">+ Nouveau questionnaire</button>
+        </div>
+      </header>
+
+      <div class="questionnaire-grid" id="questionnaire-library"></div>
+
+      <div class="panel" id="questionnaire-builder">
+        <div class="panel-header"><h3>Constructeur de questionnaire</h3></div>
+        <label class="field-label">Nom du questionnaire
+          <input type="text" id="qb-name" placeholder="Ex : Enquête insertion professionnelle 6 mois">
+        </label>
+        <div id="qb-questions" class="qb-questions"></div>
+        <div class="qb-add-row">
+          <input type="text" id="qb-new-question" placeholder="Intitulé de la question…" class="qb-input">
+          <select id="qb-new-type" class="filter-select">
+            <option value="text">Réponse libre</option>
+            <option value="choice">Choix unique</option>
+            <option value="multi">Choix multiple</option>
+            <option value="scale">Échelle 1-5</option>
+          </select>
+          <button class="btn btn-secondary" id="btn-add-question">+ Ajouter</button>
+        </div>
+        <button class="btn btn-primary" id="btn-save-questionnaire">Enregistrer dans la bibliothèque</button>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         ÉCRAN 6 — RÉSULTATS D'UNE ENQUÊTE
+    ======================================================= -->
+    <section id="screen-survey-results" class="screen">
+      <header class="screen-header">
+        <div>
+          <h1>Résultats & rapports</h1>
+          <p class="screen-subtitle">Analyse d'insertion professionnelle et suivi des campagnes</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" id="btn-export-report">⬇ Exporter le rapport (CSV)</button>
+        </div>
+      </header>
+
+      <div class="toolbar">
+        <select id="results-campaign-select" class="filter-select"></select>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span class="kpi-label">Taux de réponse</span>
+          <span class="kpi-value" id="res-response-rate">—</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">En poste</span>
+          <span class="kpi-value" id="res-employed">—</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">En recherche</span>
+          <span class="kpi-value" id="res-seeking">—</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Poursuite d'études</span>
+          <span class="kpi-value" id="res-studying">—</span>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="panel wide">
+          <div class="panel-header"><h3>Évolution du taux de réponse (relances)</h3></div>
+          <div class="bar-chart" id="chart-response-evolution"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Répartition par localisation</h3></div>
+          <ul class="legend-list" id="chart-location"></ul>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Répartition par secteur d'activité</h3></div>
+          <ul class="legend-list" id="chart-sector"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         ÉCRAN 8 — AUTOMATISATIONS
+    ======================================================= -->
+    <section id="screen-automations" class="screen">
+      <header class="screen-header">
+        <div>
+          <h1>Automatisations</h1>
+          <p class="screen-subtitle">Règles métier « Quand… Alors… » pilotant le cycle de vie Alumni</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-primary" id="btn-new-rule">+ Nouvelle règle</button>
+        </div>
+      </header>
+
+      <div class="automation-list" id="automation-list"></div>
+
+      <div class="panel" id="automation-simulator">
+        <div class="panel-header"><h3>Simuler un déclencheur</h3></div>
+        <p class="pane-hint">Choisissez un événement pour voir quelle automatisation se déclenche, comme si le temps s'écoulait réellement.</p>
+        <div class="simulator-row">
+          <select id="sim-trigger" class="filter-select"></select>
+          <button class="btn btn-secondary" id="btn-run-simulation">▶ Simuler</button>
+        </div>
+        <div class="simulation-log" id="simulation-log"></div>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         ÉCRAN 7 — PORTAIL ALUMNI (côté diplômé)
+    ======================================================= -->
+    <section id="screen-alumni-portal" class="screen">
+      <header class="screen-header">
+        <div>
+          <h1>Bonjour <span id="portal-firstname">—</span> 👋</h1>
+          <p class="screen-subtitle">Votre espace Alumni</p>
+        </div>
+      </header>
+
+      <div class="portal-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Mon profil</h3>
+            <span class="badge" id="portal-completion-badge"></span>
+          </div>
+          <dl class="detail-list" id="portal-profile-view"></dl>
+          <button class="btn btn-primary" id="btn-edit-profile">✏️ Modifier mes informations</button>
+        </div>
+
+        <div class="panel hidden" id="portal-edit-panel">
+          <div class="panel-header"><h3>Modifier mes informations</h3></div>
+          <div class="form-grid">
+            <label>Situation professionnelle
+              <select id="edit-status">
+                <option>En poste</option>
+                <option>En recherche d'emploi</option>
+                <option>Poursuite d'études</option>
+                <option>Entrepreneur</option>
+              </select>
+            </label>
+            <label>Entreprise
+              <input type="text" id="edit-company">
+            </label>
+            <label>Poste occupé
+              <input type="text" id="edit-jobtitle">
+            </label>
+            <label>Secteur d'activité
+              <input type="text" id="edit-sector">
+            </label>
+            <label>Ville
+              <input type="text" id="edit-city">
+            </label>
+            <label>Pays
+              <input type="text" id="edit-country">
+            </label>
+          </div>
+          <div class="wizard-actions">
+            <button class="btn btn-ghost" id="btn-cancel-edit">Annuler</button>
+            <button class="btn btn-primary" id="btn-validate-edit">Valider la mise à jour</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>Enquêtes disponibles</h3></div>
+          <ul class="interaction-list" id="portal-surveys-available"></ul>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Historique de mes réponses</h3></div>
+          <ul class="interaction-list" id="portal-surveys-history"></ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
